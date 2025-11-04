@@ -1,0 +1,78 @@
+version: '3.9'
+
+networks:
+  railway:
+    driver: bridge
+
+services:
+  db:
+    image: postgres:15
+    env_file: .env
+    container_name: rail_db
+    ports:
+      - "5432:5432"
+    networks:
+      - railway
+    restart: unless-stopped
+    security_opt:
+      - no-new-privileges:true
+    cap_drop:
+      - ALL
+    cap_add:
+      - CHOWN
+      - FOWNER
+      - SETUID
+      - SETGID
+      - DAC_OVERRIDE
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U $${POSTGRES_USER:-postgres}"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    read_only: true
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+      - ./db/01_init.sql:/docker-entrypoint-initdb.d/01_init.sql:ro
+      - ./db/02_insert.sql:/docker-entrypoint-initdb.d/02_insert.sql:ro
+    tmpfs:
+      - /tmp
+      - /var/run/postgresql
+
+  pgadmin:
+    image: dpage/pgadmin4
+    env_file: .env
+    container_name: rail_pg
+    ports:
+      - "5051:80"
+    networks:
+      - railway
+    restart: unless-stopped
+    volumes:
+      - pgadmin_data:/var/lib/pgadmin
+    tmpfs:
+      - /var/cache
+      - /tmp
+
+  app:
+    build: ./app
+    env_file: .env
+    container_name: rail_app
+    ports:
+      - "8000:8000"
+    networks:
+      - railway
+    restart: unless-stopped
+    security_opt:
+      - no-new-privileges:true
+    cap_drop:
+      - ALL
+    read_only: true
+    depends_on:
+      db:
+        condition: service_healthy
+    tmpfs:
+      - /tmp
+
+volumes:
+  postgres_data:
+  pgadmin_data: {}
