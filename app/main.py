@@ -1,8 +1,10 @@
 from contextlib import asynccontextmanager
+from pathlib import Path
 from fastapi import FastAPI
+from fastapi.staticfiles import StaticFiles
 
 from db.pool import init_pool, close_pool
-from api.routes import router
+from api.routes import router, frontend_router
 
 
 @asynccontextmanager
@@ -22,5 +24,10 @@ app = FastAPI(
     lifespan=lifespan
 )
 
-# Подключаем роуты
+# Подключаем статические файлы (CSS, JS)
+static_dir = Path(__file__).parent / "frontend"
+app.mount("/static", StaticFiles(directory=str(static_dir)), name="static")
+
+# Подключаем все роуты
+app.include_router(frontend_router)
 app.include_router(router, prefix="/api", tags=["trains"])

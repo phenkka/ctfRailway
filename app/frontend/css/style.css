@@ -1,0 +1,359 @@
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+}
+
+body {
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    min-height: 100vh;
+    padding: 20px;
+    color: #333;
+}
+
+.container {
+    max-width: 1200px;
+    margin: 0 auto;
+    background: white;
+    border-radius: 15px;
+    box-shadow: 0 10px 40px rgba(0, 0, 0, 0.2);
+    overflow: hidden;
+}
+
+header {
+    background: linear-gradient(135deg, #1e3c72 0%, #2a5298 100%);
+    color: white;
+    padding: 30px;
+    text-align: center;
+}
+
+header h1 {
+    font-size: 2.5em;
+    margin-bottom: 10px;
+    text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.3);
+}
+
+.subtitle {
+    font-size: 1.2em;
+    opacity: 0.9;
+}
+
+.date-tabs-container {
+    background: #f8f9fa;
+    border-bottom: 2px solid #e9ecef;
+    padding: 15px 0;
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+}
+
+.date-tabs {
+    display: flex;
+    gap: 10px;
+    padding: 0 30px;
+    min-width: max-content;
+}
+
+.date-tab {
+    padding: 10px 20px;
+    background: white;
+    border: 2px solid #ced4da;
+    border-radius: 8px;
+    cursor: pointer;
+    transition: all 0.3s;
+    font-size: 0.9em;
+    font-weight: 500;
+    color: #495057;
+    white-space: nowrap;
+    flex-shrink: 0;
+}
+
+.date-tab:hover {
+    border-color: #667eea;
+    background: #f0f4ff;
+    transform: translateY(-2px);
+    box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+}
+
+.date-tab.active {
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    color: white;
+    border-color: #667eea;
+    box-shadow: 0 3px 10px rgba(102, 126, 234, 0.3);
+    font-weight: 600;
+}
+
+.date-tab.active:hover {
+    background: linear-gradient(135deg, #5568d3 0%, #6a3d8f 100%);
+    transform: translateY(-2px);
+}
+
+.filters {
+    padding: 20px 30px;
+    background: #f8f9fa;
+    border-bottom: 2px solid #e9ecef;
+    display: flex;
+    gap: 15px;
+    align-items: center;
+    flex-wrap: wrap;
+}
+
+.filters label {
+    font-weight: 600;
+    color: #495057;
+}
+
+.filters select {
+    padding: 10px 15px;
+    border: 2px solid #ced4da;
+    border-radius: 8px;
+    font-size: 1em;
+    background: white;
+    color: #495057;
+    cursor: pointer;
+    transition: border-color 0.3s;
+}
+
+.filters select:hover {
+    border-color: #667eea;
+}
+
+.filters select:focus {
+    outline: none;
+    border-color: #667eea;
+    box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+}
+
+.refresh-btn {
+    padding: 10px 20px;
+    background: #667eea;
+    color: white;
+    border: none;
+    border-radius: 8px;
+    font-size: 1em;
+    cursor: pointer;
+    transition: background 0.3s;
+    font-weight: 600;
+}
+
+.refresh-btn:hover {
+    background: #5568d3;
+}
+
+.refresh-btn:active {
+    transform: scale(0.98);
+}
+
+.loading, .error {
+    padding: 40px;
+    text-align: center;
+    font-size: 1.2em;
+}
+
+.loading {
+    color: #667eea;
+}
+
+.error {
+    color: #dc3545;
+    background: #f8d7da;
+    border-left: 4px solid #dc3545;
+    margin: 20px;
+    border-radius: 5px;
+}
+
+.trains-container {
+    padding: 30px;
+}
+
+.train-card {
+    background: #f8f9fa;
+    border-left: 5px solid #667eea;
+    border-radius: 10px;
+    padding: 20px;
+    margin-bottom: 20px;
+    transition: transform 0.2s, box-shadow 0.2s;
+    box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+}
+
+.train-card:hover {
+    transform: translateY(-3px);
+    box-shadow: 0 5px 15px rgba(0, 0, 0, 0.2);
+}
+
+.train-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 15px;
+    flex-wrap: wrap;
+    gap: 10px;
+}
+
+.train-brand {
+    font-size: 1.5em;
+    font-weight: bold;
+    color: #1e3c72;
+}
+
+.train-type {
+    display: inline-block;
+    padding: 5px 12px;
+    border-radius: 20px;
+    font-size: 0.85em;
+    font-weight: 600;
+    text-transform: uppercase;
+}
+
+.train-type.suburban {
+    background: #28a745;
+    color: white;
+}
+
+.train-type.express {
+    background: #ffc107;
+    color: #333;
+}
+
+.train-type.mail {
+    background: #17a2b8;
+    color: white;
+}
+
+.train-type.long-distance {
+    background: #dc3545;
+    color: white;
+}
+
+.route-info {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+    gap: 15px;
+    margin-bottom: 15px;
+}
+
+.route-item {
+    background: white;
+    padding: 12px;
+    border-radius: 8px;
+    border: 1px solid #e9ecef;
+}
+
+.route-item-label {
+    font-size: 0.85em;
+    color: #6c757d;
+    margin-bottom: 5px;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+}
+
+.route-item-value {
+    font-size: 1.1em;
+    font-weight: 600;
+    color: #333;
+}
+
+.time-info {
+    display: flex;
+    gap: 20px;
+    flex-wrap: wrap;
+    margin-top: 15px;
+    padding-top: 15px;
+    border-top: 2px dashed #dee2e6;
+}
+
+.time-item {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.time-item .time-label {
+    color: #6c757d;
+    font-size: 0.9em;
+}
+
+.time-item .time-value {
+    font-weight: bold;
+    font-size: 1.1em;
+    color: #1e3c72;
+}
+
+.platform-info {
+    margin-top: 15px;
+    padding: 10px;
+    background: #e7f3ff;
+    border-radius: 8px;
+    display: inline-block;
+}
+
+.platform-info .platform-label {
+    color: #6c757d;
+    font-size: 0.9em;
+    margin-right: 8px;
+}
+
+.platform-info .platform-value {
+    font-weight: bold;
+    font-size: 1.2em;
+    color: #0056b3;
+}
+
+.no-trains {
+    text-align: center;
+    padding: 60px 20px;
+    color: #6c757d;
+    font-size: 1.2em;
+}
+
+.no-trains::before {
+    content: "🚂";
+    font-size: 3em;
+    display: block;
+    margin-bottom: 20px;
+}
+
+@media (max-width: 768px) {
+    header h1 {
+        font-size: 2em;
+    }
+
+    .date-tabs-container {
+        padding: 10px 0;
+    }
+
+    .date-tabs {
+        padding: 0 15px;
+        gap: 8px;
+    }
+
+    .date-tab {
+        padding: 8px 15px;
+        font-size: 0.85em;
+    }
+
+    .filters {
+        flex-direction: column;
+        align-items: stretch;
+        padding: 15px 20px;
+    }
+
+    .filters select,
+    .refresh-btn {
+        width: 100%;
+    }
+
+    .train-header {
+        flex-direction: column;
+        align-items: flex-start;
+    }
+
+    .route-info {
+        grid-template-columns: 1fr;
+    }
+
+    .trains-container {
+        padding: 20px;
+    }
+}
+

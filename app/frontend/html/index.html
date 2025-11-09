@@ -1,0 +1,50 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Расписание поездов - Екатеринбург</title>
+    <link rel="stylesheet" href="/static/css/style.css">
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1>🚂 Расписание поездов</h1>
+            <p class="subtitle">Вокзал Екатеринбург</p>
+        </header>
+
+        <div class="date-tabs-container">
+            <div class="date-tabs" id="dateTabs">
+                <!-- Вкладки по дням будут сгенерированы через JavaScript -->
+            </div>
+        </div>
+
+        <div class="filters">
+            <label for="trainTypeFilter">Фильтр по типу поезда:</label>
+            <select id="trainTypeFilter">
+                <option value="">Все поезда</option>
+                <option value="suburban">Пригородные (РАЗ)</option>
+                <option value="express">Экспресс (Ласточка, Финист)</option>
+                <option value="mail">Почтовые (Почта-РЖД)</option>
+                <option value="long-distance">Дальнего следования (РЖД-ЛД)</option>
+            </select>
+            <button id="refreshBtn" class="refresh-btn">Обновить</button>
+        </div>
+
+        <div class="loading" id="loading">
+            <p>Загрузка расписания...</p>
+        </div>
+
+        <div class="error" id="error" style="display: none;">
+            <p id="errorMessage"></p>
+        </div>
+
+        <div class="trains-container" id="trainsContainer">
+            <!-- Рейсы будут загружены здесь через JavaScript -->
+        </div>
+    </div>
+
+    <script src="/static/js/main.js"></script>
+</body>
+</html>
+

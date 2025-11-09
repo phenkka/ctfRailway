@@ -1,5 +1,6 @@
 from typing import Optional
 from pydantic import BaseModel
+from datetime import date
 
 
 class TrainWithRoute(BaseModel):
@@ -13,3 +14,4 @@ class TrainWithRoute(BaseModel):
     arrival_time: Optional[str]  # Время прибытия может быть NULL
     departure_time: Optional[str]  # Время отправления может быть NULL
     platform: Optional[int]
+    schedule_date: date  # Дата расписания
