@@ -4,13 +4,17 @@ let allTrains = [];
 let currentSelectedDate = null;
 let currentTrainTypeFilter = '';
 
+// Время сейчас в часовом поясе Екатеринбурга
+function getEkbNow() {
+    const now = new Date();
+    const ekbOffsetMinutes = 5 * 60; // UTC+5
+    const localOffsetMinutes = now.getTimezoneOffset(); // в минутах
+    return new Date(now.getTime() + (localOffsetMinutes + ekbOffsetMinutes) * 60 * 1000);
+}
+
 // Получение текущей даты в часовом поясе Екатеринбурга
 function getCurrentDate() {
-    const now = new Date();
-    // Екатеринбург: UTC+5
-    const ekbOffset = 5 * 60; // минуты
-    const localOffset = now.getTimezoneOffset(); // минуты
-    const ekbTime = new Date(now.getTime() + (localOffset + ekbOffset) * 60 * 1000);
+    const ekbTime = getEkbNow();
     return ekbTime.toISOString().split('T')[0]; // YYYY-MM-DD
 }
 
@@ -155,6 +159,7 @@ function displayTrains(trains) {
 
 // Создание карточки поезда
 function createTrainCard(train) {
+    const shouldShowPlat = shouldShowPlatform(train);
     const typeLabels = {
         'suburban': 'Пригородный',
         'express': 'Экспресс',
@@ -203,7 +208,7 @@ function createTrainCard(train) {
         `;
     }
 
-    const platformInfo = train.platform 
+    const platformInfo = (train.platform && shouldShowPlat)
         ? `<div class="platform-info">
              <span class="platform-label">Платформа:</span>
              <span class="platform-value">${train.platform}</span>
@@ -237,6 +242,61 @@ function formatTime(timeString) {
     if (!timeString) return '—';
     // Если время в формате "HH:MM:SS", обрезаем до "HH:MM"
     return timeString.substring(0, 5);
+}
+
+// Парсинг "HH:MM[:SS]" в объект времени
+function parseTimeToHM(timeString) {
+    if (!timeString) return null;
+    const parts = timeString.split(':');
+    const h = parseInt(parts[0], 10);
+    const m = parseInt(parts[1], 10);
+    if (Number.isNaN(h) || Number.isNaN(m)) return null;
+    return { h, m };
+}
+
+// Собрать локальный Date в час. поясе Екб для выбранной даты и времени HH:MM
+function ekbDateTimeForSelectedDate(timeString) {
+    const selectedDate = currentSelectedDate || getCurrentDate();
+    const hm = parseTimeToHM(timeString);
+    if (!hm) return null;
+    // Конструируем как если бы это локальная дата в Екб
+    // Используем компоненты, чтобы избежать влияния локальной TZ: создадим ISO и потом поправим в getEkbNow сравнением в том же "Екб-времени"
+    const [year, month, day] = selectedDate.split('-').map(n => parseInt(n, 10));
+    // Создаем дату в "локальном" времени текущей среды, но мы сравниваем с getEkbNow(), который тоже приведен к Екб, так что достаточно согласованности
+    return new Date(year, month - 1, day, hm.h, hm.m, 0, 0);
+}
+
+// Показывать ли платформу: только за 15 минут до события и 10 минут после
+// Правила:
+// - Если есть arrival и departure: окно [arrival - 15m ; departure + 10m]
+// - Иначе: одно событие (arr или dep): окно [event - 15m ; event + 10m]
+// - Для не сегодняшней даты окно не наступит "сейчас", так что платформа скрыта
+function shouldShowPlatform(train) {
+    // Без платформы показывать нечего
+    if (!train.platform) return false;
+    const nowEkb = getEkbNow();
+    const currentDate = getCurrentDate();
+    const selectedDate = currentSelectedDate || currentDate;
+    // Скрываем для дат не сегодня — пользователь увидит платформу лишь в реальном окне
+    if (selectedDate !== currentDate) return false;
+
+    const arrDt = train.arrival_time ? ekbDateTimeForSelectedDate(train.arrival_time) : null;
+    const depDt = train.departure_time ? ekbDateTimeForSelectedDate(train.departure_time) : null;
+
+    let windowStart = null;
+    let windowEnd = null;
+
+    if (arrDt && depDt) {
+        windowStart = new Date(arrDt.getTime() - 15 * 60 * 1000);
+        windowEnd = new Date(depDt.getTime() + 10 * 60 * 1000);
+    } else {
+        const base = depDt || arrDt;
+        if (!base) return false;
+        windowStart = new Date(base.getTime() - 15 * 60 * 1000);
+        windowEnd = new Date(base.getTime() + 10 * 60 * 1000);
+    }
+
+    return nowEkb >= windowStart && nowEkb <= windowEnd;
 }
 
 // Фильтрация поездов
