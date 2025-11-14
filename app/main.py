@@ -5,6 +5,7 @@ from fastapi.staticfiles import StaticFiles
 
 from db.pool import init_pool, close_pool
 from api.routes import router, frontend_router
+from core.logger import request_logger_middleware
 
 
 @asynccontextmanager
@@ -23,6 +24,9 @@ app = FastAPI(
     version="1.0.0",
     lifespan=lifespan
 )
+
+# Подключаем middleware для логирования
+app.middleware("http")(request_logger_middleware)
 
 # Подключаем статические файлы (CSS, JS)
 static_dir = Path(__file__).parent / "frontend"
