@@ -34,6 +34,7 @@ services:
       - postgres_data:/var/lib/postgresql/data
       - ./db/01_init.sql:/docker-entrypoint-initdb.d/01_init.sql:ro
       - ./db/02_insert.sql:/docker-entrypoint-initdb.d/02_insert.sql:ro
+      - ./db/03_logs.sql:/docker-entrypoint-initdb.d/03_logs.sql:ro
     tmpfs:
       - /tmp
       - /var/run/postgresql
@@ -73,6 +74,35 @@ services:
     tmpfs:
       - /tmp
 
+  gitlab:
+    image: gitlab/gitlab-ce:latest
+    container_name: rail_gitlab
+    hostname: 'localhost'
+    ports:
+      - "8081:8081"
+      - "8443:443"
+      - "2222:22"
+    networks:
+      - railway
+    restart: unless-stopped
+    environment:
+      GITLAB_OMNIBUS_CONFIG: |
+        external_url 'http://localhost:8081'
+        gitlab_rails['gitlab_shell_ssh_port'] = 2222
+        # Отключаем ненужные функции для простого развертывания
+        gitlab_rails['gitlab_default_theme'] = 2
+        # Уменьшаем использование ресурсов
+        puma['worker_processes'] = 2
+        sidekiq['max_concurrency'] = 5
+    volumes:
+      - gitlab_config:/etc/gitlab
+      - gitlab_logs:/var/log/gitlab
+      - gitlab_data:/var/opt/gitlab
+    shm_size: '256m'
+
 volumes:
   postgres_data:
-  pgadmin_data: {}
+  pgadmin_data:
+  gitlab_config:
+  gitlab_logs:
+  gitlab_data:
