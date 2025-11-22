@@ -39,6 +39,19 @@ services:
       - /tmp
       - /var/run/postgresql
 
+  admin:
+      build: ./admin_panel
+      container_name: rail_admin
+      env_file: .env
+      networks:
+        - railway
+      ports:
+        - "8001:8000"
+      depends_on:
+        db:
+          condition: service_healthy
+      restart: unless-stopped
+
   pgadmin:
     image: dpage/pgadmin4
     env_file: .env
@@ -99,7 +112,7 @@ services:
       - gitlab_logs:/var/log/gitlab
       - gitlab_data:/var/opt/gitlab
     shm_size: '256m'
-
+  
 volumes:
   postgres_data:
   pgadmin_data:

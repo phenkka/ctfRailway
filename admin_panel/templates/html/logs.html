@@ -1,0 +1,56 @@
+<!DOCTYPE html>
+<html lang="ru">
+
+<head>
+    <meta charset="UTF-8">
+    <title>Админ — логи</title>
+    <link rel="stylesheet" href="../css/style.css">
+</head>
+
+<body>
+
+    <header>
+        Панель администратора — Логи
+    </header>
+
+    <div class="content">
+
+        <div class="top-bar">
+            <div>Показано: {{ limit }} записей</div>
+            <a class="logout" href="/logout">Выйти</a>
+        </div>
+
+        <table>
+            <thead>
+                <tr>
+                    <th>ID</th>
+                    <th>Тип события</th>
+                    <th>Действие</th>
+                    <th>Статус</th>
+                    <th>Время</th>
+                    <th>Детали</th>
+                </tr>
+            </thead>
+
+            <tbody>
+                {% for log in logs %}
+                <tr>
+                    <td>{{ log.log_id }}</td>
+                    <td>{{ log.event_type }}</td>
+                    <td>{{ log.action }}</td>
+                    <td>{{ log.status_code }}</td>
+                    <td>{{ log.created_at }}</td>
+                    <td class="details-cell">
+                        {{ log.details }}
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+
+        </table>
+
+    </div>
+
+</body>
+
+</html>

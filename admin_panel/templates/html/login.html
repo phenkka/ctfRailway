@@ -1,0 +1,33 @@
+<!DOCTYPE html>
+<html lang="ru">
+
+<head>
+    <meta charset="UTF-8">
+    <title>Админ — вход</title>
+    <link rel="stylesheet" href="../css/style.css">
+</head>
+
+<body>
+
+    <div class="container">
+        <h1>Вход в админ-панель</h1>
+
+        {% if error %}
+        <p class="error">{{ error }}</p>
+        {% endif %}
+
+        <form action="/login" method="post">
+
+            <label>Логин</label>
+            <input type="text" name="username">
+
+            <label>Пароль</label>
+            <input type="password" name="password">
+
+            <button type="submit">Войти</button>
+        </form>
+    </div>
+
+</body>
+
+</html>
