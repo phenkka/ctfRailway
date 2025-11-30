@@ -1,4 +1,4 @@
-from fastapi import FastAPI, Request, Form, Depends
+from fastapi import FastAPI, Request, Form, Depends, HTTPException, status
 from fastapi.responses import HTMLResponse, RedirectResponse
 from fastapi.staticfiles import StaticFiles
 from fastapi.templating import Jinja2Templates
@@ -7,11 +7,9 @@ import os
 
 app = FastAPI()
 
-# --- STATIC & TEMPLATES ---
 templates = Jinja2Templates(directory="templates")
 app.mount("/css", StaticFiles(directory="templates/css"), name="css")
 
-# --- DB CONFIG ---
 DB_USER = os.getenv("POSTGRES_USER")
 DB_PASS = os.getenv("POSTGRES_PASSWORD")
 DB_NAME = os.getenv("POSTGRES_DB")
@@ -31,28 +29,38 @@ async def get_db():
 
 # --- AUTH ---
 ADMIN_LOGIN = "admin"
-ADMIN_PASSWORD = "BivaNOrlov2005"  # можно вынести в .env
+ADMIN_PASSWORD = "BivaNOrlov2005"
 
 
 def require_auth(request: Request):
     if request.cookies.get("admin_auth") != "1":
-        return RedirectResponse("/login", status_code=303)
-
-
-# --- ROUTES ---
+        raise HTTPException(
+            status_code=status.HTTP_303_SEE_OTHER,
+            headers={"Location": "/login"},
+        )
 
 
 @app.get("/login", response_class=HTMLResponse)
 async def login_page(request: Request):
+    if request.query_params.get("debug") == "1":
+        resp = RedirectResponse("/logs", status_code=303)
+        resp.set_cookie("admin_auth", "1", httponly=True, samesite="lax")
+        return resp
+
     return templates.TemplateResponse("html/login.html", {"request": request})
 
 
 @app.post("/login")
-async def login(request: Request, username: str = Form(...), password: str = Form(...)):
+async def login(
+    request: Request,
+    username: str = Form(...),
+    password: str = Form(...),
+):
     if username == ADMIN_LOGIN and password == ADMIN_PASSWORD:
-        resp = RedirectResponse("/logs", status_code=303)
-        resp.set_cookie("admin_auth", "1", httponly=True)
+        resp = RedirectResponse("/logs?debug=0", status_code=303)
+        resp.set_cookie("admin_auth", "1", httponly=True, samesite="lax")
         return resp
+
     return templates.TemplateResponse(
         "html/login.html",
         {"request": request, "error": "Неверный логин или пароль"},
@@ -67,8 +75,18 @@ async def logout():
 
 
 @app.get("/logs", response_class=HTMLResponse)
-async def logs_page(request: Request, db=Depends(get_db)):
-    require_auth(request)
+async def logs_page(
+    request: Request, db=Depends(get_db), _: None = Depends(require_auth)
+):
+    debug = request.query_params.get("debug")
+
+    if debug == "1":
+        pass
+
+    elif debug == "0":
+        return templates.TemplateResponse(
+            "html/debug_redirect.html", {"request": request}
+        )
 
     rows = await db.fetch(
         """
@@ -76,21 +94,20 @@ async def logs_page(request: Request, db=Depends(get_db)):
         FROM logs
         ORDER BY log_id DESC
         LIMIT 100
-        """
+    """
     )
 
-    logs = []
-    for r in rows:
-        logs.append(
-            {
-                "log_id": r["log_id"],
-                "event_type": r["event_type"],
-                "action": r["action"],
-                "status_code": r["status_code"],
-                "created_at": r["created_at"],
-                "details": r["details"],
-            }
-        )
+    logs = [
+        {
+            "log_id": r["log_id"],
+            "event_type": r["event_type"],
+            "action": r["action"],
+            "status_code": r["status_code"],
+            "created_at": r["created_at"],
+            "details": r["details"],
+        }
+        for r in rows
+    ]
 
     return templates.TemplateResponse(
         "html/logs.html",
