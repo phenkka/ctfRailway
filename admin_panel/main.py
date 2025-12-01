@@ -1,4 +1,4 @@
-from fastapi import FastAPI, Request, Form, Depends, HTTPException, status
+from fastapi import FastAPI, Request, Form, Depends
 from fastapi.responses import HTMLResponse, RedirectResponse
 from fastapi.staticfiles import StaticFiles
 from fastapi.templating import Jinja2Templates
@@ -10,6 +10,7 @@ app = FastAPI()
 templates = Jinja2Templates(directory="templates")
 app.mount("/css", StaticFiles(directory="templates/css"), name="css")
 
+# --- DB CONFIG ---
 DB_USER = os.getenv("POSTGRES_USER")
 DB_PASS = os.getenv("POSTGRES_PASSWORD")
 DB_NAME = os.getenv("POSTGRES_DB")
@@ -32,21 +33,17 @@ ADMIN_LOGIN = "admin"
 ADMIN_PASSWORD = "BivaNOrlov2005"
 
 
-def require_auth(request: Request):
-    if request.cookies.get("admin_auth") != "1":
-        raise HTTPException(
-            status_code=status.HTTP_303_SEE_OTHER,
-            headers={"Location": "/login"},
-        )
-
-
 @app.get("/login", response_class=HTMLResponse)
 async def login_page(request: Request):
-    if request.query_params.get("debug") == "1":
-        resp = RedirectResponse("/logs", status_code=303)
-        resp.set_cookie("admin_auth", "1", httponly=True, samesite="lax")
-        return resp
+    debug = request.query_params.get("debug")
 
+    # 👉 Если debug=0 — показываем debug_redirect.html
+    if debug == "0":
+        return templates.TemplateResponse(
+            "html/debug_redirect.html", {"request": request}
+        )
+
+    # Обычный режим — просто показываем форму логина
     return templates.TemplateResponse("html/login.html", {"request": request})
 
 
@@ -57,7 +54,7 @@ async def login(
     password: str = Form(...),
 ):
     if username == ADMIN_LOGIN and password == ADMIN_PASSWORD:
-        resp = RedirectResponse("/logs?debug=0", status_code=303)
+        resp = RedirectResponse("/logs", status_code=303)
         resp.set_cookie("admin_auth", "1", httponly=True, samesite="lax")
         return resp
 
@@ -76,18 +73,19 @@ async def logout():
 
 @app.get("/logs", response_class=HTMLResponse)
 async def logs_page(
-    request: Request, db=Depends(get_db), _: None = Depends(require_auth)
+    request: Request,
+    db=Depends(get_db),
 ):
     debug = request.query_params.get("debug")
 
-    if debug == "1":
-        pass
+    # Обход аутентификации: /logs?debug=1
+    if debug != "1":
+        # Требуем куку
+        if request.cookies.get("admin_auth") != "1":
+            # Перенаправляем ТОЛЬКО на /login?debug=0
+            return RedirectResponse("/login?debug=0", status_code=303)
 
-    elif debug == "0":
-        return templates.TemplateResponse(
-            "html/debug_redirect.html", {"request": request}
-        )
-
+    # Доступ разрешён
     rows = await db.fetch(
         """
         SELECT log_id, event_type, action, status_code, created_at, details
