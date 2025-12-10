@@ -1,0 +1,57 @@
+upstream app_backend {
+  server rail_app:8000;
+}
+
+upstream admin_backend {
+  server rail_admin:8000;
+}
+
+upstream gitlab_backend {
+  server rail_gitlab:8081;
+}
+
+server {
+  listen 80;
+  server_name ${APP_DOMAIN};
+
+  location / {
+    proxy_pass http://app_backend;
+    proxy_set_header Host $host;
+    proxy_set_header X-Real-IP $remote_addr;
+    proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+    proxy_set_header X-Forwarded-Proto $scheme;
+    proxy_set_header Upgrade $http_upgrade;
+    proxy_set_header Connection $connection_upgrade;
+  }
+}
+
+server {
+  listen 80;
+  server_name ${ADMIN_DOMAIN};
+
+  location / {
+    proxy_pass http://admin_backend;
+    proxy_set_header Host $host;
+    proxy_set_header X-Real-IP $remote_addr;
+    proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+    proxy_set_header X-Forwarded-Proto $scheme;
+    proxy_set_header Upgrade $http_upgrade;
+    proxy_set_header Connection $connection_upgrade;
+  }
+}
+
+server {
+  listen 80;
+  server_name ${GITLAB_DOMAIN};
+
+  location / {
+    proxy_pass http://gitlab_backend;
+    proxy_set_header Host $host;
+    proxy_set_header X-Real-IP $remote_addr;
+    proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+    proxy_set_header X-Forwarded-Proto $scheme;
+    proxy_set_header Upgrade $http_upgrade;
+    proxy_set_header Connection $connection_upgrade;
+  }
+}
+

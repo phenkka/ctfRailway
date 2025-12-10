@@ -52,21 +52,6 @@ services:
           condition: service_healthy
       restart: unless-stopped
 
-  pgadmin:
-    image: dpage/pgadmin4
-    env_file: .env
-    container_name: rail_pg
-    ports:
-      - "5051:80"
-    networks:
-      - railway
-    restart: unless-stopped
-    volumes:
-      - pgadmin_data:/var/lib/pgadmin
-    tmpfs:
-      - /var/cache
-      - /tmp
-
   app:
     build: ./app
     env_file: .env
@@ -100,7 +85,7 @@ services:
     restart: unless-stopped
     environment:
       GITLAB_OMNIBUS_CONFIG: |
-        external_url 'http://localhost:8081'
+        external_url "http://${GITLAB_DOMAIN:-gitlab.example.com}"
         gitlab_rails['gitlab_shell_ssh_port'] = 2222
         # Отключаем ненужные функции для простого развертывания
         gitlab_rails['gitlab_default_theme'] = 2
@@ -112,6 +97,25 @@ services:
       - gitlab_logs:/var/log/gitlab
       - gitlab_data:/var/opt/gitlab
     shm_size: '256m'
+  
+  nginx:
+    image: nginx:1.27-alpine
+    container_name: rail_nginx
+    depends_on:
+      - app
+      - admin
+      - gitlab
+    ports:
+      - "80:80"
+    volumes:
+      - ./nginx/templates:/etc/nginx/templates:ro
+    networks:
+      - railway
+    restart: unless-stopped
+    environment:
+      APP_DOMAIN: "${APP_DOMAIN:-app.127.0.0.1.nip.io}"
+      ADMIN_DOMAIN: "${ADMIN_DOMAIN:-admin.127.0.0.1.nip.io}"
+      GITLAB_DOMAIN: "${GITLAB_DOMAIN:-gitlab.127.0.0.1.nip.io}"
   
 volumes:
   postgres_data:
